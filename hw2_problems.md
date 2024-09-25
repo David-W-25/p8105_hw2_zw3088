@@ -1,0 +1,98 @@
+Homework 2 Problems
+================
+Zicheng Wang
+2024-09-25
+
+Initialization of packages.
+
+## Problem 1
+
+Import subway E&T data, clean the names and retain line, station, name,
+station latitude / longitude, routes served, entry, vending, entrance
+type, and ADA compliance. In addition, the entry has been changed from
+chr to logic.
+
+``` r
+subway_df = 
+  read_csv(file = "./NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  select(line:entry, vending, ada) |>
+  mutate(
+      entry = case_match(
+        entry,
+        "YES" ~ TRUE,
+        "NO" ~ FALSE
+      )
+  )
+```
+
+    ## Rows: 1868 Columns: 32
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (22): Division, Line, Station Name, Route1, Route2, Route3, Route4, Rout...
+    ## dbl  (8): Station Latitude, Station Longitude, Route8, Route9, Route10, Rout...
+    ## lgl  (2): ADA, Free Crossover
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+Before the cleaning, the raw data had 32 variables, after the cleaning,
+the dataset had **19** variables and **1868** observations (dimension:
+1868\*19). The dataset is tidied according to the instrcutions.
+
+``` r
+distinct_station = nrow(distinct(subway_df, line, station_name))
+```
+
+There are **465** distinct stations in the dataset.
+
+``` r
+subway_df = 
+  subway_df |>
+  distinct(line, station_name, .keep_all = TRUE)
+```
+
+Calculate how many station that are ADA compliant, and the proportion of
+stations that not support vending in entry/exit.
+
+``` r
+ada_support = sum(subway_df$ada == TRUE)
+vending_not_support = sum(subway_df$vending == "NO")
+proportion_not_support = vending_not_support / distinct_station * 100
+```
+
+There are **84** ADA compliant. There are **1.9354839** % proportion of
+station that not support vending in entry/exit.
+
+Reformat data so that route number and route name are distinct
+variables.
+
+``` r
+subway_tidy_df = 
+  subway_df |>
+  mutate(
+    route8 = as.character(route8),
+    route9 = as.character(route9),
+    route10 = as.character(route10),
+    route11 = as.character(route11)
+  ) |>
+  pivot_longer(
+    route1:route11,
+    names_to = "route_number",
+    names_prefix = "route",
+    values_to = "route_names"
+  ) |>
+  filter(!is.na(route_names))
+```
+
+Calculate how many distinct stations serve the A train, and in these
+station how many are ADA compliant.
+
+``` r
+Station_with_A_route = sum(subway_tidy_df$route_names == "A")
+A_route = filter(subway_tidy_df, subway_tidy_df$route_names == "A")
+ADA_compliant_A = sum(A_route$ada == TRUE)
+```
+
+There are **60** stations serve the A train, and among these stations,
+**17** stations are ADA compliant.

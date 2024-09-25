@@ -1,0 +1,99 @@
+---
+title: "Homework 2 Problems"
+author: "Zicheng Wang"
+date: "2024-09-25"
+output: github_document
+---
+
+Initialization of packages.
+```{r setup, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(readxl)
+```
+
+## Problem 1
+
+Import subway E&T data, clean the names and retain line, station, name, station latitude / longitude, routes served, entry, vending, entrance type, and ADA compliance. In addition, the entry has been changed from chr to logic.
+
+```{r}
+subway_df = 
+  read_csv(file = "./NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  select(line:entry, vending, ada) |>
+  mutate(
+      entry = case_match(
+        entry,
+        "YES" ~ TRUE,
+        "NO" ~ FALSE
+      )
+  )
+```
+
+Before the cleaning, the raw data had 32 variables, after the cleaning, the dataset had **19** variables and **1868** observations (dimension: 1868*19). The dataset is tidied according to the instrcutions.
+
+```{r}
+distinct_station = nrow(distinct(subway_df, line, station_name))
+```
+
+There are **`r distinct_station`** distinct stations in the dataset.
+
+```{r}
+subway_df = 
+  subway_df |>
+  distinct(line, station_name, .keep_all = TRUE)
+```
+
+Calculate how many station that are ADA compliant, and the proportion of stations that not support vending in entry/exit.
+
+```{r}
+ada_support = sum(subway_df$ada == TRUE)
+vending_not_support = sum(subway_df$vending == "NO")
+proportion_not_support = vending_not_support / distinct_station * 100
+```
+There are **`r ada_support`** ADA compliant.
+There are **`r proportion_not_support`** % proportion of station that not support vending in entry/exit.
+
+Reformat data so that route number and route name are distinct variables. 
+
+```{r}
+subway_tidy_df = 
+  subway_df |>
+  mutate(
+    route8 = as.character(route8),
+    route9 = as.character(route9),
+    route10 = as.character(route10),
+    route11 = as.character(route11)
+  ) |>
+  pivot_longer(
+    route1:route11,
+    names_to = "route_number",
+    names_prefix = "route",
+    values_to = "route_names"
+  ) |>
+  filter(!is.na(route_names))
+
+```
+
+Calculate how many distinct stations serve the A train, and in these station how many are ADA compliant.
+
+```{r}
+Station_with_A_route = sum(subway_tidy_df$route_names == "A")
+A_route = filter(subway_tidy_df, subway_tidy_df$route_names == "A")
+ADA_compliant_A = sum(A_route$ada == TRUE)
+```
+
+There are **`r Station_with_A_route`** stations serve the A train, and among these stations, **`r ADA_compliant_A`** stations are ADA compliant.
+
+
+## Problem 2
+
+Import data of trash wheel
+```{r}
+trash_wheel_df = 
+  read_excel("./202309 Trash Wheel Collection Data.xlsx", na = c("NA", "", ".")) |>
+  janitor::clean_names()
+
+```
+
+
+
