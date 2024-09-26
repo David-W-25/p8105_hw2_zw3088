@@ -87,13 +87,88 @@ There are **`r Station_with_A_route`** stations serve the A train, and among the
 
 ## Problem 2
 
-Import data of trash wheel
+Import data of Mr trash wheel
 ```{r}
-trash_wheel_df = 
-  read_excel("./202309 Trash Wheel Collection Data.xlsx", na = c("NA", "", ".")) |>
-  janitor::clean_names()
+mr_trash_wheel_df = 
+  read_excel("./202309 Trash Wheel Collection Data.xlsx",
+             sheet = "Mr. Trash Wheel",
+             range = "A2:N586",
+             na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  filter(!is.na(dumpster)) |>
+  mutate(
+    sports_balls = as.numeric(round(sports_balls, digits = 0)),
+    trash_wheel = "mr_trash_wheel",
+    year = as.double(year)
+  )
 
 ```
 
+Show the head of Mr trash wheel
+```{r}
+head(mr_trash_wheel_df, 5)
+```
+
+Import data of professor trash wheel
+```{r}
+prof_trash_wheel_df = 
+  read_excel("./202309 Trash Wheel Collection Data.xlsx",
+             sheet = "Professor Trash Wheel",
+             range = "A2:M108",
+             na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  filter(!is.na(dumpster)) |>
+  mutate(
+    trash_wheel = "prof_trash_wheel"
+  )
+
+```
+
+Show the head of Professor trash wheel
+```{r}
+head(prof_trash_wheel_df, 5)
+```
+
+Import data of gwynnda trash wheel
+```{r}
+gwynnda_trash_wheel_df = 
+  read_excel("./202309 Trash Wheel Collection Data.xlsx",
+             sheet = "Gwynnda Trash Wheel",
+             range = "A2:L157",
+             na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  filter(!is.na(dumpster)) |>
+  mutate(
+    trash_wheel = "gwynnda_trash_wheel"
+  )
+
+```
+
+Show the head of Gwynnda trash wheel
+```{r}
+head(gwynnda_trash_wheel_df, 5)
+```
+
+Combine three existing trash wheel data into one data frame
+```{r}
+trash_wheel_tidy =
+  bind_rows(mr_trash_wheel_df, prof_trash_wheel_df, gwynnda_trash_wheel_df) |>
+  janitor::clean_names() |>
+  relocate(trash_wheel)
+  
+```
+
+Calculate the total weight of professor trash wheel and total number of cigarette butts collected by Gwynnda trash wheel in June of 2022.
+```{r}
+total_weight = sum(trash_wheel_tidy$weight_tons[trash_wheel_tidy$trash_wheel == "prof_trash_wheel"],
+                   na.rm = TRUE)
+
+cigarette_butt = sum(trash_wheel_tidy$cigarette_butts[
+  trash_wheel_tidy$trash_wheel == "gwynnda_trash_wheel" &
+  trash_wheel_tidy$month == "June" &
+  trash_wheel_tidy$year == 2022],
+  na.rm = TRUE)
+```
+The total weight of professor trash wheel is **`r total_weight`** tons, and total number of cigarette butts collected by Gwynnda trash wheel in June of 2022 is **`r cigarette_butt`** counts.
 
 
