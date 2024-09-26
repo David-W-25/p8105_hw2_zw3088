@@ -226,3 +226,153 @@ cigarette_butt = sum(trash_wheel_tidy$cigarette_butts[
 The total weight of professor trash wheel is **216.26** tons, and total
 number of cigarette butts collected by Gwynnda trash wheel in June of
 2022 is **1.812^{4}** counts.
+
+## Problem 3
+
+Import data of bakers
+
+``` r
+bakers_df =
+  read_csv("./gbb_datasets/bakers.csv", na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  separate(
+    baker_name, into = c("baker", "last_name"), sep = " "
+  )
+```
+
+    ## Rows: 120 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (3): Baker Name, Baker Occupation, Hometown
+    ## dbl (2): Series, Baker Age
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+Import data of bakes
+
+``` r
+bakes_df =
+  read_csv("./gbb_datasets/bakes.csv", na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  mutate(
+    baker = replace(baker, baker == '"Jo"', "Jo")
+  )
+```
+
+    ## Rows: 548 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (3): Baker, Signature Bake, Show Stopper
+    ## dbl (2): Series, Episode
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+Import data of results
+
+``` r
+results_df =
+  read_csv("./gbb_datasets/results.csv", skip = 2, na = c("NA", "", ".")) |>
+  janitor::clean_names()
+```
+
+    ## Rows: 1136 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): baker, result
+    ## dbl (3): series, episode, technical
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+Join the data frame into one using `left_join`
+
+``` r
+baker_show_df = left_join(results_df, bakers_df, by = c("baker", "series")) |>
+  left_join(bakes_df, by = c("baker", "series", "episode")) |>
+  relocate(baker, last_name, baker_age, baker_occupation, hometown, signature_bake, show_stopper) |>
+  arrange(baker) |>
+  mutate(result = str_to_lower(result)) |>
+  filter(!is.na(result))
+```
+
+Export dataframe
+
+``` r
+write_csv(baker_show_df, "./gbb_datasets/baker_show.csv")
+```
+
+Show winners and star bakers from session 5 to 10.
+
+``` r
+baker_winner =
+  baker_show_df |>
+  filter(series >= 5 & series <= 10) |>
+  filter(result == "winner" | result == "star baker") |>
+  relocate(series, episode, result) |>
+  arrange(series, episode)
+head(baker_winner, 5)
+```
+
+    ## # A tibble: 5 × 11
+    ##   series episode result     baker  last_name baker_age baker_occupation hometown
+    ##    <dbl>   <dbl> <chr>      <chr>  <chr>         <dbl> <chr>            <chr>   
+    ## 1      5       1 star baker Nancy  Birtwhis…        60 Retired Practic… Barton-…
+    ## 2      5       2 star baker Richa… Burr             38 Builder          Mill Hi…
+    ## 3      5       3 star baker Luis   Troyano          42 Graphic Designer Poynton…
+    ## 4      5       4 star baker Richa… Burr             38 Builder          Mill Hi…
+    ## 5      5       5 star baker Kate   Henry            41 Furniture Resto… Brighto…
+    ## # ℹ 3 more variables: signature_bake <chr>, show_stopper <chr>, technical <dbl>
+
+Some star bakers win the runner-up, which exemplify their skills and
+talent (eg Luis Troyano), while some star bakers were out soon after
+(Chetna Makan). Also, some winners did not won at least one star baker
+in previous episode (eg David Atherton), which is a twist for TV show.
+
+Import viewership data
+
+``` r
+viewers_df =
+  read_csv("./gbb_datasets/viewers.csv", na = c("NA", "", ".")) |>
+  janitor::clean_names()
+```
+
+    ## Rows: 10 Columns: 11
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## dbl (11): Episode, Series 1, Series 2, Series 3, Series 4, Series 5, Series ...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+Show the first ten rows of the data
+
+``` r
+head(viewers_df, 10)
+```
+
+    ## # A tibble: 10 × 11
+    ##    episode series_1 series_2 series_3 series_4 series_5 series_6 series_7
+    ##      <dbl>    <dbl>    <dbl>    <dbl>    <dbl>    <dbl>    <dbl>    <dbl>
+    ##  1       1     2.24     3.1      3.85     6.6      8.51     11.6     13.6
+    ##  2       2     3        3.53     4.6      6.65     8.79     11.6     13.4
+    ##  3       3     3        3.82     4.53     7.17     9.28     12.0     13.0
+    ##  4       4     2.6      3.6      4.71     6.82    10.2      12.4     13.3
+    ##  5       5     3.03     3.83     4.61     6.95     9.95     12.4     13.1
+    ##  6       6     2.75     4.25     4.82     7.32    10.1      12       13.1
+    ##  7       7    NA        4.42     5.1      7.76    10.3      12.4     13.4
+    ##  8       8    NA        5.06     5.35     7.41     9.02     11.1     13.3
+    ##  9       9    NA       NA        5.7      7.41    10.7      12.6     13.4
+    ## 10      10    NA       NA        6.74     9.45    13.5      15.0     15.9
+    ## # ℹ 3 more variables: series_8 <dbl>, series_9 <dbl>, series_10 <dbl>
+
+Calculate average viewership in session 1 and 5
+
+``` r
+session_1 = round(mean(viewers_df$series_1, na.rm = TRUE), 2)
+session_5 = round(mean(viewers_df$series_5, na.rm = TRUE), 2)
+```
+
+The average viewership in session 1 is **2.77**, and in session 5 is
+**10.04**.
