@@ -103,7 +103,7 @@ Import data of Mr trash wheel
 
 ``` r
 mr_trash_wheel_df = 
-  read_excel("./202309 Trash Wheel Collection Data.xlsx",
+  read_excel("./202409 Trash Wheel Collection Data.xlsx",
              sheet = "Mr. Trash Wheel",
              range = "A2:N586",
              na = c("NA", "", ".")) |>
@@ -138,7 +138,7 @@ Import data of professor trash wheel
 
 ``` r
 prof_trash_wheel_df = 
-  read_excel("./202309 Trash Wheel Collection Data.xlsx",
+  read_excel("./202409 Trash Wheel Collection Data.xlsx",
              sheet = "Professor Trash Wheel",
              range = "A2:M108",
              na = c("NA", "", ".")) |>
@@ -171,7 +171,7 @@ Import data of gwynnda trash wheel
 
 ``` r
 gwynnda_trash_wheel_df = 
-  read_excel("./202309 Trash Wheel Collection Data.xlsx",
+  read_excel("./202409 Trash Wheel Collection Data.xlsx",
              sheet = "Gwynnda Trash Wheel",
              range = "A2:L157",
              na = c("NA", "", ".")) |>
